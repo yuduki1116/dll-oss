@@ -22,18 +22,36 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: Fix dependencies in CMakeLists.txt
+      - name: Fix dependencies
         shell: pwsh
         run: |
+          Write-Host "=== Searching for fmt / master / EclipseMenu ==="
+          Get-ChildItem -Recurse -Include *.txt,*.cmake | Select-String -Pattern 'fmt|master|discord-presence|rift'
+
           $content = Get-Content CMakeLists.txt -Raw
-          $updated = [regex]::Replace($content,
-            '(?is)(FetchContent_Declare\s*\(\s*fmt\b.*?)(master\vert{}develop\vert{}HEAD)([\s\)]|$)',
-            '${1}main${3}'
+          $updated = [regex]::Replace(
+            $content,
+            '(?is)(fmt\b.*?)(?:GIT_TAG\s+|TAG\s+|VERSION\s+)master\b',
+            '${1}GIT_TAG main'
           )
-          if ($updated -eq $content) {$updated = [regex]::Replace($content, '(?im)^(.*\bfmt\b.*)\bmaster\b', '${1}main')
+          if ($updated -eq $content) {
+            $lines = Get-Content CMakeLists.txt
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match '\bfmt\b') {
+                $start = [Math]::Max(0, $i - 2)
+                $end = [Math]::Min($lines.Count - 1, $i + 6)
+                for ($j = $start; $j -le $end; $j++) {
+                  if ($lines[$j] -match '\bmaster\b') {
+                    $lines[$j] = $lines[$j] -replace '\bmaster\b', 'main'
+                  }
+                }
+              }
+            }
+            $updated = ($lines -join "`n") + "`n"
           }
-          $updated =$updated -replace 'https://github\.com/EclipseMenu/discord-presence(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/discord-presence.git'
-          $updated =$updated -replace 'https://github\.com/EclipseMenu/rift(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/rift.git'
+
+          $updated = $updated -replace 'https://github\.com/EclipseMenu/discord-presence(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/discord-presence.git'
+          $updated = $updated -replace 'https://github\.com/EclipseMenu/rift(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/rift.git'
           Set-Content CMakeLists.txt -Value $updated -NoNewline
 
       - name: Configure
