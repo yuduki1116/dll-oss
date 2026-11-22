@@ -22,7 +22,7 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: Fix fmt branch
+      - name: Fix dependencies in CMakeLists.txt
         shell: pwsh
         run: |
           $content = Get-Content CMakeLists.txt -Raw
@@ -34,12 +34,7 @@ jobs:
           if ($updated -eq $content) {
             $updated = [regex]::Replace($content, '(?im)^(.*\bfmt\b.*)\bmaster\b', '${1}main')
           }
-          if ($updated -eq $content) {
-            Write-Host "WARNING: No replacement occurred for fmt in CMakeLists.txt"
-          } else {
-            Write-Host "Updated fmt reference in CMakeLists.txt"
-          }
-          Select-String -Path CMakeLists.txt -Pattern 'fmt' -Context 2,4
+          $updated = $updated -replace 'https://github\.com/EclipseMenu/discord-presence(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/discord-presence.git'
           Set-Content CMakeLists.txt -Value $updated -NoNewline
 
       - name: Configure
