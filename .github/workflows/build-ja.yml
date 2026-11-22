@@ -22,12 +22,9 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: Fix dependencies
+      - name: Fix dependencies and build options
         shell: pwsh
         run: |
-          Write-Host "=== Searching for fmt / master / EclipseMenu ==="
-          Get-ChildItem -Recurse -Include *.txt,*.cmake | Select-String -Pattern 'fmt|master|discord-presence|rift'
-
           $content = Get-Content CMakeLists.txt -Raw
           $updated = [regex]::Replace(
             $content,
@@ -52,12 +49,24 @@ jobs:
 
           $updated = $updated -replace 'https://github\.com/EclipseMenu/discord-presence(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/discord-presence.git'
           $updated = $updated -replace 'https://github\.com/EclipseMenu/rift(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/rift.git'
+
+          if ($updated -match 'target_link_libraries\s*\(\s*Flarial\b') {
+            $updated = [regex]::Replace(
+              $updated,
+              '(target_link_libraries\s*\(\s*Flarial\b)',
+              "set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`n`$1",
+              1
+            )
+          } else {
+            $updated += "`nif(TARGET Flarial)`n  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`nendif()`n"
+          }
+
           Set-Content CMakeLists.txt -Value $updated -NoNewline
 
       - name: Configure
         shell: cmd
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCMAKE_UNITY_BUILD=OFF -DCMAKE_CXX_FLAGS="/bigobj"
 
       - name: Build
         shell: cmd
