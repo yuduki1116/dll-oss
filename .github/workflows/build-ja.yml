@@ -22,7 +22,7 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
-      - name: Fix dependencies and build options
+      - name: Fix dependencies and workarounds
         shell: pwsh
         run: |
           $content = Get-Content CMakeLists.txt -Raw
@@ -49,19 +49,18 @@ jobs:
 
           $updated = $updated -replace 'https://github\.com/EclipseMenu/discord-presence(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/discord-presence.git'
           $updated = $updated -replace 'https://github\.com/EclipseMenu/rift(?:\.git)?', 'https://git.eclipse.menu/EclipseMenu/rift.git'
-
-          if ($updated -match 'target_link_libraries\s*\(\s*Flarial\b') {
-            $updated = [regex]::Replace(
-              $updated,
-              '(target_link_libraries\s*\(\s*Flarial\b)',
-              "set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`n`$1",
-              1
-            )
-          } else {
-            $updated += "`nif(TARGET Flarial)`n  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`nendif()`n"
-          }
-
+          $updated = $updated -replace 'UNITY_BUILD\s+ON', 'UNITY_BUILD OFF'
+          $updated += "`nset(CMAKE_UNITY_BUILD OFF CACHE BOOL `"`" FORCE)`nif(TARGET Flarial)`n  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`nendif()`n"
           Set-Content CMakeLists.txt -Value $updated -NoNewline
+
+          $netLibPath = "src/Scripting/ScriptLibs/NetworkLib.hpp"
+          if (Test-Path $netLibPath) {
+            $netContent = Get-Content $netLibPath -Raw
+            if ($netContent -notmatch '#pragma optimize\("", off\)') {
+              $netUpdated = "#pragma optimize(`"`", off)`n" + $netContent + "`n#pragma optimize(`"`", on)`n"
+              Set-Content $netLibPath -Value $netUpdated -NoNewline
+            }
+          }
 
       - name: Configure
         shell: cmd
