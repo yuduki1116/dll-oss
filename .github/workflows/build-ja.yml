@@ -52,8 +52,7 @@ jobs:
           $updated = [regex]::Replace($updated, '(?im)UNITY_BUILD\s+ON', 'UNITY_BUILD OFF')
           $updated = [regex]::Replace($updated, '(?im)set\s*\(\s*CMAKE_UNITY_BUILD\s+ON\b', 'set(CMAKE_UNITY_BUILD OFF')
 
-          $targetHook = "if(TARGET Flarial)`n  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`n  if(EXISTS `"`${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp`")`n    set_source_files_properties(`"`${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp`" PROPERTIES COMPILE_FLAGS `"/Od`")`n  endif()`nendif()"
-
+          $targetHook = "if(TARGET Flarial)`n  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)`nendif()"
           if ($updated -match '(?m)^(target_link_libraries\s*\(\s*Flarial\b)') {
             $updated = [regex]::Replace($updated, '(?m)^(target_link_libraries\s*\(\s*Flarial\b)', ($targetHook + "`n" + '$1'), 1)
           } else {
@@ -65,14 +64,10 @@ jobs:
           $netLibPath = "src/Scripting/ScriptLibs/NetworkLib.hpp"
           if (Test-Path $netLibPath) {
             $netContent = Get-Content $netLibPath -Raw
-            if ($netContent -notmatch '#include <functional>') {
-              $netContent = "#include <functional>`n" + $netContent
+            $netUpdated = $netContent -replace ',\s*\[\s*\]\s*\(', ', +[]('
+            if ($netUpdated -notmatch '#pragma optimize\("", off\)') {
+              $netUpdated = "#pragma optimize(`"`", off)`n" + $netUpdated + "`n#pragma optimize(`"`", on)`n"
             }
-            $netUpdated = [regex]::Replace(
-              $netContent,
-              '(?s)(addFunction\s*(?:<[^>]*>)?\s*\(\s*[^,]+,\s*)(\[.*?\]\s*\([^\)]*\)\s*(?:mutable\s*)?(?:->\s*[^\{]+)?\s*\{.*?\})(\s*\))',
-              '${1}std::function(${2})${3}'
-            )
             Set-Content $netLibPath -Value $netUpdated -NoNewline
           }
 
