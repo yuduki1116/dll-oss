@@ -25,9 +25,22 @@ jobs:
       - name: Fix fmt branch
         shell: pwsh
         run: |
-          (Get-Content CMakeLists.txt) | ForEach-Object {
-            if ($_ -match 'fmt' -and $_ -match 'master') { $_ -replace 'master', 'main' } else { $_ }
-          } | Set-Content CMakeLists.txt
+          $content = Get-Content CMakeLists.txt -Raw
+          $updated = [regex]::Replace(
+            $content,
+            '(?is)(FetchContent_Declare\s*\(\s*fmt\b.*?)(master|develop|HEAD)([\s\)]|$)',
+            '${1}main${3}'
+          )
+          if ($updated -eq $content) {
+            $updated = [regex]::Replace($content, '(?im)^(.*\bfmt\b.*)\bmaster\b', '${1}main')
+          }
+          if ($updated -eq $content) {
+            Write-Host "WARNING: No replacement occurred for fmt in CMakeLists.txt"
+          } else {
+            Write-Host "Updated fmt reference in CMakeLists.txt"
+          }
+          Select-String -Path CMakeLists.txt -Pattern 'fmt' -Context 2,4
+          Set-Content CMakeLists.txt -Value $updated -NoNewline
 
       - name: Configure
         shell: cmd
@@ -51,4 +64,3 @@ jobs:
         with:
           name: Flarial_JA
           path: out/
-          
