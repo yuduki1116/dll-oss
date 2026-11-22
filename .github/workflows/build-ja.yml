@@ -66,7 +66,7 @@ jobs:
       - name: Configure
         shell: cmd
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCMAKE_UNITY_BUILD=OFF -DCMAKE_CXX_FLAGS="/bigobj"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCMAKE_UNITY_BUILD=OFF -DCMAKE_CXX_FLAGS="/EHsc /bigobj /WX-"
 
       - name: Build
         shell: cmd
