@@ -22,6 +22,11 @@ jobs:
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
+      - name: Fix fmt branch
+        shell: pwsh
+        run: |
+          (Get-Content CMakeLists.txt -Raw) -replace 'master', 'main' | Set-Content CMakeLists.txt -NoNewline
+
       - name: Configure
         shell: cmd
         run: |
