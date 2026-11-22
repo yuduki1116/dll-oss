@@ -25,7 +25,9 @@ jobs:
       - name: Fix fmt branch
         shell: pwsh
         run: |
-          (Get-Content CMakeLists.txt -Raw) -replace 'master', 'main' | Set-Content CMakeLists.txt -NoNewline
+          (Get-Content CMakeLists.txt) | ForEach-Object {
+            if ($_ -match 'fmt' -and $_ -match 'master') { $_ -replace 'master', 'main' } else { $_ }
+          } | Set-Content CMakeLists.txt
 
       - name: Configure
         shell: cmd
@@ -49,3 +51,4 @@ jobs:
         with:
           name: Flarial_JA
           path: out/
+          
