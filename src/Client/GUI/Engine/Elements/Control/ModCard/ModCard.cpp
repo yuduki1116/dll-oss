@@ -3,6 +3,7 @@
 #include "../../../../../Module/Modules/ClickGUI/ClickGUI.hpp"
 #include "../Utils/WinrtUtils.hpp"
 #include "Utils/UserActionLogger.hpp"
+#include "Utils/Translation.hpp"
 
 #define clickgui ModuleManager::getModule("ClickGUI")
 
@@ -104,7 +105,7 @@ void ClickGUIElements::ModCard(float x, float y, Module *mod, int iconId, const 
     float textHeight = Constraints::RelativeConstraint(0.2);
     D2D1_COLOR_F textCol = ClickGUI::getColor("modNameText");
 
-    FlarialGUI::FlarialTextWithFont(textx, texty, FlarialGUI::to_wide(mod->name).c_str(), textWidth, textHeight,
+    FlarialGUI::FlarialTextWithFont(textx, texty, FlarialGUI::to_wide(Translation::tr(mod->name)).c_str(), textWidth, textHeight,
                                     DWRITE_TEXT_ALIGNMENT_CENTER,
                                     Constraints::SpacingConstraint(0.854, textWidth),
                                     DWRITE_FONT_WEIGHT_NORMAL, textCol, false);
@@ -254,7 +255,7 @@ void ClickGUIElements::ModCard(float x, float y, Module *mod, int iconId, const 
         }
     }
 
-    FlarialGUI::FlarialTextWithFont((buttonx - buttonWidth) - Constraints::SpacingConstraint(0.15f, paddingwidth), buttony - buttonHeight, FlarialGUI::to_wide(text).c_str(), buttonWidth, buttonHeight, DWRITE_TEXT_ALIGNMENT_CENTER, buttonWidth * 1.08, DWRITE_FONT_WEIGHT_NORMAL, textCol2, false);
+    FlarialGUI::FlarialTextWithFont((buttonx - buttonWidth) - Constraints::SpacingConstraint(0.15f, paddingwidth), buttony - buttonHeight, FlarialGUI::to_wide(Translation::tr(text)).c_str(), buttonWidth, buttonHeight, DWRITE_TEXT_ALIGNMENT_CENTER, buttonWidth * 1.08, DWRITE_FONT_WEIGHT_NORMAL, textCol2, false);
 
     D2D1::RectF();
     if (FlarialGUI::isInScrollView) buttony += FlarialGUI::scrollpos;

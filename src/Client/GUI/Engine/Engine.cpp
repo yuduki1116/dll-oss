@@ -1960,10 +1960,16 @@ void FlarialGUI::CopyBitmap(ID2D1Bitmap1* from, ID2D1Bitmap** to) {
 
 std::wstring to_wide_creator(const std::string& str) {
 
-	int wchars_num = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
+	// UTF-8として正しければUTF-8で変換(日本語化対応)。不正なら従来通りCP_ACP。
+	UINT cp = CP_UTF8;
+	int wchars_num = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.c_str(), -1, nullptr, 0);
+	if (wchars_num == 0) {
+		cp = CP_ACP;
+		wchars_num = MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, nullptr, 0);
+	}
 	std::wstring wide;
 	wide.resize(wchars_num);
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, &wide[0], wchars_num);
+	MultiByteToWideChar(cp, cp == CP_UTF8 ? MB_ERR_INVALID_CHARS : 0, str.c_str(), -1, &wide[0], wchars_num);
 	return wide;
 }
 

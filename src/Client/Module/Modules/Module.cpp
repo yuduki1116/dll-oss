@@ -1,5 +1,6 @@
 #include "Module.hpp"
 #include "Utils/UserActionLogger.hpp"
+#include "Utils/Translation.hpp"
 
 #include "../../Client.hpp"
 
@@ -412,7 +413,8 @@ void Module::extraPadding(float percent) {
     padding += Constraints::RelativeConstraint(percent, "height", true);
 }
 
-void Module::addHeader(const std::string& text) {
+void Module::addHeader(const std::string& text_) {
+    const std::string text = Translation::tr(text_);
     float x = Constraints::PercentageConstraint(0.019, "left");
     float y = Constraints::PercentageConstraint(0.10, "top") + padding;
 
@@ -435,7 +437,9 @@ void Module::addHeader(const std::string& text) {
     padding += Constraints::RelativeConstraint(0.055f, "height", true);
 }
 
-void Module::addElementText(const std::string& text, const std::string& subtext) {
+void Module::addElementText(const std::string& text_, const std::string& subtext_) {
+    const std::string text = Translation::tr(text_);
+    const std::string subtext = Translation::tr(subtext_);
     float x = Constraints::PercentageConstraint(0.019, "left");
     float y = Constraints::PercentageConstraint(0.10, "top") + padding;
 
@@ -478,7 +482,9 @@ void Module::addElementText(const std::string& text, const std::string& subtext)
     }
 }
 
-void Module::addElementTextWithBackground(const std::string& text, const std::string& subtext) {
+void Module::addElementTextWithBackground(const std::string& text_, const std::string& subtext_) {
+    const std::string text = Translation::tr(text_);
+    const std::string subtext = Translation::tr(subtext_);
     float x = Constraints::PercentageConstraint(0.019, "left");
     float y = Constraints::PercentageConstraint(0.10, "top") + padding;
 
@@ -556,7 +562,7 @@ void Module::addButton(const std::string &text, const std::string &subtext, cons
     D2D1_COLOR_F f = D2D1::ColorF(D2D1::ColorF::White);
     f.a = ClickGUI::settingsOpacity;
 
-    if (FlarialGUI::RoundedButton(buttonIndex, elementX, y - height / 2.f, col, f, FlarialGUI::to_wide(buttonText).c_str(), width, height, round.x, round.y)) {
+    if (FlarialGUI::RoundedButton(buttonIndex, elementX, y - height / 2.f, col, f, FlarialGUI::to_wide(Translation::tr(buttonText)).c_str(), width, height, round.x, round.y)) {
         action();
     }
 

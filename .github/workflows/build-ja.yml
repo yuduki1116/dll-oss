@@ -1,0 +1,46 @@
+name: Build Flarial JA
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Configure
+        shell: cmd
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+
+      - name: Build
+        shell: cmd
+        run: cmake --build build --config Release
+
+      - name: Collect
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out/Lang | Out-Null
+          Copy-Item build/Flarial.dll out/
+          Copy-Item Lang/ja.json out/Lang/
+          if (Test-Path build/Flarial.pdb) { Copy-Item build/Flarial.pdb out/ }
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flarial_JA
+          path: out/
