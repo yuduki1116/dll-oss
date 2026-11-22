@@ -52,40 +52,20 @@ jobs:
           $updated = [regex]::Replace($updated, '(?im)UNITY_BUILD\s+ON', 'UNITY_BUILD OFF')
           $updated = [regex]::Replace($updated, '(?im)set\s*\(\s*CMAKE_UNITY_BUILD\s+ON\b', 'set(CMAKE_UNITY_BUILD OFF')
 
-          $targetHook = @'
-if(TARGET Flarial)
-  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp")
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp" PROPERTIES COMPILE_FLAGS "/Od")
-  endif()
-endif()
-'@
+          $targetHook = @(
+            'if(TARGET Flarial)',
+            '  set_target_properties(Flarial PROPERTIES UNITY_BUILD OFF)',
+            '  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp")',
+            '    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/src/Scripting/Script.cpp" PROPERTIES COMPILE_FLAGS "/Od")',
+            '  endif()',
+            'endif()'
+          ) -join "`n"
+
           if ($updated -match '(?m)^(target_link_libraries\s*\(\s*Flarial\b)') {
-            $updated = [regex]::Replace($updated, '(?m)^(target_link_libraries\s*\(\s*Flarial\b)', ($targetHook + "`n" + '$1'), 1)
-          } else {
-            $updated += "`n" + $targetHook + "`n"
-          }
-
-          Set-Content CMakeLists.txt -Value $updated -NoNewline
-
-          $netLibPath = "src/Scripting/ScriptLibs/NetworkLib.hpp"
-          if (Test-Path $netLibPath) {
-            Write-Host "=== NetworkLib.hpp around lines 35-105 ==="
-            $netLines = Get-Content $netLibPath
-            for ($i = 34; $i -lt [Math]::Min($netLines.Count, 105); $i++) {
-              Write-Host ("{0,3}: {1}" -f ($i + 1), $netLines[$i])
-            }
-
-            $netContent = Get-Content $netLibPath -Raw
-            if ($netContent -notmatch '#include <functional>') {
-              $netContent = "#include <functional>`n" + $netContent
-            }
-            $netUpdated = [regex]::Replace(
-              $netContent,
-              '(?s)(addFunction\s*(?:<[^>]*>)?\s*\(\s*[^,]+,\s*)(\[.*?\]\s*\([^\)]*\)\s*(?:mutable\s*)?(?:->\s*[^\{]+)?\s*\{.*?\})(\s*\))',
+            $updated = [regex]::Replace($updated, '(?m)^(target_link_libraries\s*\(\s*Flarial\b)', ($targetHook + "`n" + '$1'), 1) } else { $updated += "`n" + $targetHook + "`n" }  Set-Content CMakeLists.txt -Value $updated -NoNewline  $netLibPath = "src/Scripting/ScriptLibs/NetworkLib.hpp" if (Test-Path $netLibPath) { Write-Host "=== NetworkLib.hpp around lines 35-105 ===" $netLines = Get-Content $netLibPath for ($i = 34; $i -lt [Math]::Min($netLines.Count, 105); $i++) { Write-Host ("{0,3}: {1}" -f ($i + 1), $netLines[$i]) }  $netContent = Get-Content $netLibPath -Raw if ($netContent -notmatch '#include <functional>') { $netContent = "#include <functional>`n" + $netContent } $netUpdated = [regex]::Replace($netContent, '(?s)(addFunction\s*(?:<[^>]*>)?\s*\(\s*[^,]+,\s*)(\[.*?\]\s*\([^\)]*\)\s*(?:mutable\s*)?(?:->\s*[^\{]+)?\s*\{.*?\})(\s*\))',
               '${1}std::function(${2})${3}'
             )
-            Set-Content $netLibPath -Value $netUpdated -NoNewline
+            Set-Content $netLibPath -Value$netUpdated -NoNewline
           }
 
       - name: Configure
